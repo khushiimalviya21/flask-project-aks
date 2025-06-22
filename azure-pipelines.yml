@@ -62,7 +62,7 @@ stages:
       displayName: Apply Kubernetes manifests
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: 'azure-aks-connection'  # ✅ Correct key name
+        azureSubscriptionEndpoint: 'azure-aks-connection'  # ✅ Correct key name
         azureResourceGroup: 'flask-rg'
         kubernetesCluster: 'flask-aks'
         namespace: default
