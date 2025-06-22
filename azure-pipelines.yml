@@ -2,11 +2,11 @@ trigger:
 - main
 
 variables:
-  dockerRegistryServiceConnection: 'azure-aks-connection'   # Your Azure DevOps service connection name
-  imageRepository: 'flask-new-app'                          # New image name
+  dockerRegistryServiceConnection: 'azure-aks-connection'
+  imageRepository: 'flask-new-app'
   containerRegistry: 'khushiacr321.azurecr.io'
   dockerfilePath: 'Dockerfile'
-  tag: '$(Build.BuildId)'                                   # Unique image tag per build
+  tag: '$(Build.BuildId)'
 
 stages:
 - stage: BuildAndPush
@@ -17,12 +17,12 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - task: Docker@2
-      displayName: Build and Push Image to ACR
+      displayName: Build and Push Docker Image
       inputs:
         command: buildAndPush
+        containerRegistry: $(dockerRegistryServiceConnection)
         repository: $(imageRepository)
         dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
 
@@ -35,12 +35,12 @@ stages:
       vmImage: 'ubuntu-latest'
     steps:
     - script: |
-        echo "Injecting Build ID into deployment.yaml..."
+        echo "Injecting image tag into deployment.yaml"
         sed -i 's|__IMAGE_TAG__|$(Build.BuildId)|g' manifests/deployment.yaml
-      displayName: Replace image tag dynamically
+      displayName: Replace image tag
 
     - task: Kubernetes@1
-      displayName: Deploy to AKS
+      displayName: Apply Kubernetes Manifests
       inputs:
         connectionType: 'Azure Resource Manager'
         azureSubscription: 'azure-aks-connection'
