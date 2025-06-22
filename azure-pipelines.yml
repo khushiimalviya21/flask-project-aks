@@ -1,66 +1,57 @@
 trigger:
 - main
 
-resources:
-- repo: self
+pool:
+  vmImage: ubuntu-latest
 
 variables:
-  dockerRegistryServiceConnection: '0c888d21-4078-49ed-9220-da9b4c0bc061'  # Your ACR service connection
-  imageRepository: 'khushiimalviyaflaskprojectaks'
-  containerRegistry: 'khushiacr321.azurecr.io'
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
-  vmImageName: 'ubuntu-latest'
+  imageName: 'flask-new-app'
 
 stages:
-
-# ----------------------------
-# BUILD STAGE
-# ----------------------------
-- stage: Build
-  displayName: Build and push stage
+- stage: BuildAndPush
+  displayName: Build and Push to ACR
   jobs:
-  - job: Build
-    displayName: Build and Push to ACR
-    pool:
-      vmImage: $(vmImageName)
+  - job: BuildAndPush
+    displayName: Build and Push Docker Image
     steps:
+    - task: Checkout@1
+
     - task: Docker@2
-      displayName: Build and push an image to container registry
+      displayName: Build Docker image
       inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: $(dockerfilePath)
-        containerRegistry: $(dockerRegistryServiceConnection)
-        tags: |
-          $(tag)
+        containerRegistry: 'khushiacr321'        # ACR service connection name in Azure DevOps
+        repository: '$(imageName)'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        tags: 'latest'
 
-# ----------------------------
-# DEPLOY STAGE
-# ----------------------------
-- stage: DeployToAKS
+- stage: Deploy
   displayName: Deploy to AKS
-  dependsOn: Build
+  dependsOn: BuildAndPush
   jobs:
-  - job: Deploy
-    pool:
-      vmImage: 'ubuntu-latest'
+  - job: DeployToAKS
+    displayName: Deploy to AKS
     steps:
-    - script: |
-        echo "Injecting image tag into deployment.yaml"
-        sed -i 's|__IMAGE_TAG__|$(tag)|g' manifests/deployment.yaml
-      displayName: Replace image tag
-
     - task: Kubernetes@1
-      displayName: Apply Kubernetes manifests
+      displayName: Apply Deployment
       inputs:
         connectionType: 'Azure Resource Manager'
-        azureSubscription: 'azure-aks-connection'   # ✅ Match this to exactly what you see in the UI
-        azureResourceGroup: 'flask-rg'
+        azureSubscriptionEndpoint: 'azure-aks-connection'
+        azureResourceGroup: 'Aks-RG'
         kubernetesCluster: 'flask-aks'
-        namespace: 'default'
+        namespace: default
         command: apply
         useConfigurationFile: true
-        configuration: |
-          manifests/deployment.yaml
-          manifests/service.yaml
+        configuration: 'manifests/deployment.yaml'
+
+    - task: Kubernetes@1
+      displayName: Apply Service
+      inputs:
+        connectionType: 'Azure Resource Manager'
+        azureSubscriptionEndpoint: 'azure-aks-connection'
+        azureResourceGroup: 'Aks-RG'
+        kubernetesCluster: 'flask-aks'
+        namespace: default
+        command: apply
+        useConfigurationFile: true
+        configuration: 'manifests/service.yaml'
