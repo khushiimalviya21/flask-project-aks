@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flask-new-app
-        image: khushimalviya21.azurecr.io/khushiimalviyaflaskprojectaks:__IMAGE_TAG__
+        image: khushiacr321.azurecr.io/khushiimalviyaflaskprojectaks:__IMAGE_TAG__
         ports:
         - containerPort: 5000
         imagePullPolicy: Always
