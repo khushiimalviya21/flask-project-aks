@@ -7,7 +7,7 @@ resources:
 variables:
   dockerRegistryServiceConnection: '0c888d21-4078-49ed-9220-da9b4c0bc061'  # ACR service connection
   imageRepository: 'khushiimalviyaflaskprojectaks'
-  containerRegistry: 'khushimalviya21.azurecr.io'
+  containerRegistry: 'khushiacr321.azurecr.io'
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
   tag: '$(Build.BuildId)'
   vmImageName: 'ubuntu-latest'
